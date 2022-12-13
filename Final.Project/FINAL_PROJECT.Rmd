@@ -1,0 +1,144 @@
+---
+title: "Final Project"
+author: "Bharath Chennu, Michael Geist, Elmy Luka"
+date: "2011-12-11"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+<style>
+table {
+  font-family: arial, sans-serif;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+td, th {
+  border: 1px solid #dddddd;
+  text-align: left;
+  padding: 8px;
+}
+
+tr:nth-child(even) {
+  background-color: #dddddd;
+}
+</style>
+
+
+<html>
+<head>
+<title>Final Project</title>
+</head>
+<body>
+<p>Objective : You have been tasked with the objective of forming groups. Assume that your class consists of 12 students, and you would like to form 4 groups of 3 students each. Your primary objective is to ensure that you maximize the chance that each group will do well on a class project. Here are the requirements to form groups:<br>
+1.Each group should have exactly 3 students<br>
+2.The objective is to maximize the chance of success for each group on a class project<br>
+Before you can solve this problem, there are several issues that must be addressed. Some of these being:<br> 
+What factors affect the success of groups? Define three factors, e.g., GPA, gender, etc., that you feel affect the contributions that students make towards project success. <br> 
+How do the above factors combine to define success? For example, is a person with high GPA the same as one with a more relevant background? Decide on how each of the factors contribute toward your definition of success.<br> 
+How will you collect data for these factors? For this assignment, randomly generate sensible data for each of the above three defined factors.<br>  
+What are your decision variables? <br> 
+What is your objective function? <br> 
+What are your constraints? <br> 
+Formulate and solve the problem. Provide the corresponding R markdown file, and a narrative recorded presentation justifying your approach to the choice of factors, data collection, and formulation. <br> 
+</p><br>
+
+<p>
+So the first thing we did is we wanted to make a table of data  Within excel we used the RAND function and INT(RAND()*(a specific number))  That randomly generated data is being display below.<br>
+<table>
+<tr><th>Student</th><th>GPA</th><th>Attendance</th><th>Current Course Grade</th></tr>
+<tr><td>1</td><td>2.23</td><td>20</td><td>85</td></tr>
+<tr><td>2</td><td>2.18</td><td>25</td><td>56</td></tr>
+<tr><td>3</td><td>1.92</td><td>6</td><td>69</td></tr>
+<tr><td>4</td><td>3.49</td><td>11</td><td>93</td></tr>
+<tr><td>5</td><td>2.87</td><td>17</td><td>78</td></tr>
+<tr><td>6</td><td>1.92</td><td>24</td><td>72</td></tr>
+<tr><td>7</td><td>2.09</td><td>23</td><td>80</td></tr>
+<tr><td>8</td><td>2.06</td><td>14</td><td>64</td></tr>
+<tr><td>9</td><td>3.18</td><td>12</td><td>85</td></tr>
+<tr><td>10</td><td>3.98</td><td>24</td><td>89</td></tr>
+<tr><td>11</td><td>2.49</td><td>16</td><td>97</td></tr>
+<tr><td>12</td><td>4.00</td><td>20</td><td>88</td></tr>
+</table>
+</p>
+The three different variables we picked were GPA, Attendance, and then Course Grade.<br>
+GPA is between 0 and 4.  The higher the number the the better the student grade would be.<br>
+Attendance is based on 25 classes.<br>
+Course Grade is based on 100 percent to 50 percent(We made the assumption that if they were below 50 they would have withdrew from class).<br>
+We also made sure that the number presented by the random number generator within excel would make sense.  Someone with a 4.00 GPA would not have a 50 percent in the class (most often).  As long as it made sense we left it alone.
+</p><br>
+<p>
+Now we want to formulate the problem.<br>
+Objective Function<br><br>
+$$Max Z = 85\sum_{i=1}^{4} x_{i1} + 56\sum_{i=1}^{4} x_{i2} + 69\sum_{i=1}^{4} x_{i3} + 93\sum_{i=1}^{4} x_{i4} + 78\sum_{i=1}^{4} x_{i5} + 72\sum_{i=1}^{4} x_{i6} + 80\sum_{i=1}^{4} x_{i7} + 64\sum_{i=1}^{4} x_{i8} + 85\sum_{i=1}^{4} x_{i9} + 89\sum_{i=1}^{4} x_{i10} + 97\sum_{i=1}^{4} x_{i11} + 88\sum_{i=1}^{4} x_{i11}$$<br>
+<br>
+You can see that we are using the grades of each person along with the summation of i being the number of groups.<br>
+<br>
+Our Objective Function comes with the following constants:<br>
+Constraint for Groups<br>
+$$\sum_{j=1}^{12} x_{ij}$$ where i= groups (1-4) and j=Students (1-12)<br><br>
+Constraint for GPA<br>
+$$\sum_{j=1}^{12}GPA_j x_{ij}>=12$$ where i= groups (1-4) and j=Students (1-12)<br><br>
+Constraint for Attendance<br>
+$$\sum_{j=1}^{12}ATT_j x_{ij}>=75$$ where i= groups (1-4) and j=Students (1-12)<br><br>
+Constraint to only assign a student to one group<br>
+$$\sum_{i=1}^{4}x_{ij}=1$$ where i= groups (1-4) and j=Students (1-12)<br><br>
+All $$x_{ij}$$ are positive intergers i=1-4 and j=1-12<br>
+
+```{r}
+library(lpSolve)
+library(lpSolveAPI)
+data <- data.frame(Person = c(1:12),
+                        GPA = c(2.23, 2.18, 1.92, 3.49, 2.87, 1.92, 2.09, 2.06, 3.18, 3.98, 2.49, 4.00),
+                        Attendence = c(20,25,6,11,17,24,23,14,12,24,16,10),
+                        ClassGrade = c(85,56,69,93,78,72,80,64,85,89,97,88))
+#make linear programming object
+lp <- make.lp(0,48)
+#setting as integer 
+set.type(lp, 48, "integer")
+set.objfn(lp, rep(c(85,56,69,93,78,72,80,64,85,89,97,88,
+                    85,56,69,93,78,72,80,64,85,89,97,88,
+                    85,56,69,93,78,72,80,64,85,89,97,88,
+                    85,56,69,93,78,72,80,64,85,89,97,88)))
+#setting the LP to be a maximization
+lp.control(lp, sense="max")
+#adding the constraint for the groups to be formed (3 people per group)
+add.constraint(lp, c(rep(1,12),rep(0,36)), "=", 3)
+add.constraint(lp, c(rep(0,12),rep(1,12),rep(0,24)), "=", 3)
+add.constraint(lp, c(rep(0,24),rep(1,12),rep(0,12)), "=", 3)
+add.constraint(lp, c(rep(0,36),rep(1,12)), "=", 3)
+#Adding the GPA constraint (no one can have higher than 4.00*3 people =12)
+add.constraint(lp, rep(data$GPA,4), ">=", 12)
+#Adding attendance constraints (no one could have come to class more than 25 times * 3 people = 75)
+add.constraint(lp, rep(data$Attendence,4), ">=", 75)
+#Making sure that each student is counted 1 time so that student could not be added too multiple groups
+add.constraint(lp, rep(c(1,rep(0,11)),4), "=", 1)
+add.constraint(lp, rep(c(rep(0,1),1,rep(0,10)),4), "=", 1)
+add.constraint(lp, rep(c(rep(0,2),1,rep(0,9)),4), "=", 1)
+add.constraint(lp, rep(c(rep(0,3),1,rep(0,8)),4), "=", 1)
+add.constraint(lp, rep(c(rep(0,4),1,rep(0,7)),4), "=", 1)
+add.constraint(lp, rep(c(rep(0,5),1,rep(0,6)),4), "=", 1)
+add.constraint(lp, rep(c(rep(0,6),1,rep(0,5)),4), "=", 1)
+add.constraint(lp, rep(c(rep(0,7),1,rep(0,4)),4), "=", 1)
+add.constraint(lp, rep(c(rep(0,8),1,rep(0,3)),4), "=", 1)
+add.constraint(lp, rep(c(rep(0,9),1,rep(0,2)),4), "=", 1)
+add.constraint(lp, rep(c(rep(0,10),1,rep(0,1)),4), "=", 1)
+add.constraint(lp, rep(c(rep(0,11),1),4), "=", 1)
+solve(lp)
+get.objective(lp)
+get.variables(lp)
+data1 <- data.frame(Person = c(1:12),
+                    GPA = c(2.23, 2.18, 1.92, 3.49, 2.87, 1.92, 2.09, 2.06, 3.18, 3.98, 2.49, 4.00),
+                    Attendence = c(20,25,6,11,17,24,23,14,12,24,16,10),
+                    ClassGrade = c(85,56,69,93,78,72,80,64,85,89,97,88),
+                    Group = c(2,2,4,3,3,1,1,4,4,1,2,3))
+data1
+
+
+
+```
+</body>
